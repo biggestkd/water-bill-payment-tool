@@ -31,17 +31,17 @@ jobs:
 
       - name: Build Lambda Layer with Selenium
         run: |
-          zip -r lambda-layer.zip package
+          zip -r water-bill-automation-lambda-layer.zip package
 
       - name: Upload Lambda Layer to S3
         run: |
-          aws s3 cp lambda-layer.zip s3://your-bucket-name/lambda-layer.zip
+          aws s3 cp water-bill-automation-lambda-layer.zip s3://kw-internal-lambda-code-bucket/water-bill-automation-lambda-layer.zip
 
       - name: Create Lambda Layer
         run: |
           aws lambda publish-layer-version \
             --layer-name selenium-layer \
-            --content S3Bucket=your-bucket-name,S3Key=lambda-layer.zip \
+            --content S3Bucket=kw-internal-lambda-code-bucket,S3Key=water-bill-automation-lambda-layer.zip \
             --compatible-runtimes python3.9
 
       - name: Create or Update Lambda Function
@@ -50,19 +50,19 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: 'us-east-1'
         run: |
-          zip lambda_function.zip lambda_function.py
+          zip lambda_function.zip main.py
           LAYER_ARN=$(aws lambda list-layer-versions --layer-name selenium-layer --query 'LayerVersions[0].LayerVersionArn' --output text)
           
           # Create the Lambda function or update it if it exists
-          aws lambda create-function --function-name my-python-lambda \
+          aws lambda create-function --function-name water-bill-automation-lambda \
             --runtime python3.9 \
-            --role arn:aws:iam::your-account-id:role/your-lambda-execution-role \
+            --role arn:aws:iam::975050035941:role/water-bill-automation-lambda-role \
             --handler lambda_function.lambda_handler \
-            --timeout 120 \
+            --timeout 500 \
             --memory-size 512 \
             --layers $LAYER_ARN \
             --zip-file fileb://lambda_function.zip || \
-          aws lambda update-function-code --function-name my-python-lambda \
+          aws lambda update-function-code --function-name water-bill-automation-lambda \
             --zip-file fileb://lambda_function.zip
 
       - name: Verify Lambda Deployment
