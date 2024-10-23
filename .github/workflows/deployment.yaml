@@ -23,6 +23,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y awscli
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
       - name: Install Dependencies
         run: |
           pip install boto3 selenium webdriver-manager
@@ -42,7 +49,8 @@ jobs:
           aws lambda publish-layer-version \
             --layer-name selenium-layer \
             --content S3Bucket=kw-internal-lambda-code-bucket,S3Key=water-bill-automation-lambda-layer.zip \
-            --compatible-runtimes python3.9
+            --compatible-runtimes python3.9 \
+            --region us-east-1
 
       - name: Create or Update Lambda Function
         env:
@@ -61,8 +69,10 @@ jobs:
             --timeout 500 \
             --memory-size 512 \
             --layers $LAYER_ARN \
+            --region us-east-1 \
             --zip-file fileb://lambda_function.zip || \
           aws lambda update-function-code --function-name water-bill-automation-lambda \
+            --region us-east-1 \
             --zip-file fileb://lambda_function.zip
 
       - name: Verify Lambda Deployment
