@@ -65,7 +65,7 @@ jobs:
           aws lambda create-function --function-name water-bill-automation-lambda \
             --runtime python3.9 \
             --role arn:aws:iam::975050035941:role/water-bill-automation-lambda-role \
-            --handler lambda_function.lambda_handler \
+            --handler main.lambda_handler \
             --timeout 500 \
             --memory-size 512 \
             --layers $LAYER_ARN \
