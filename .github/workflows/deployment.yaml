@@ -1,0 +1,70 @@
+name: Deploy Lambda Function
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install AWS CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y awscli
+
+      - name: Install Dependencies
+        run: |
+          pip install boto3 selenium webdriver-manager
+          mkdir -p package/python
+          pip install boto3 selenium webdriver-manager -t package/python
+
+      - name: Build Lambda Layer with Selenium
+        run: |
+          zip -r lambda-layer.zip package
+
+      - name: Upload Lambda Layer to S3
+        run: |
+          aws s3 cp lambda-layer.zip s3://your-bucket-name/lambda-layer.zip
+
+      - name: Create Lambda Layer
+        run: |
+          aws lambda publish-layer-version \
+            --layer-name selenium-layer \
+            --content S3Bucket=your-bucket-name,S3Key=lambda-layer.zip \
+            --compatible-runtimes python3.9
+
+      - name: Create or Update Lambda Function
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: 'us-east-1'
+        run: |
+          zip lambda_function.zip lambda_function.py
+          LAYER_ARN=$(aws lambda list-layer-versions --layer-name selenium-layer --query 'LayerVersions[0].LayerVersionArn' --output text)
+          
+          # Create the Lambda function or update it if it exists
+          aws lambda create-function --function-name my-python-lambda \
+            --runtime python3.9 \
+            --role arn:aws:iam::your-account-id:role/your-lambda-execution-role \
+            --handler lambda_function.lambda_handler \
+            --timeout 120 \
+            --memory-size 512 \
+            --layers $LAYER_ARN \
+            --zip-file fileb://lambda_function.zip || \
+          aws lambda update-function-code --function-name my-python-lambda \
+            --zip-file fileb://lambda_function.zip
+
+      - name: Verify Lambda Deployment
+        run: |
+          aws lambda get-function --function-name my-python-lambda
