@@ -78,4 +78,3 @@ jobs:
       - name: Verify Lambda Deployment
         run: |
           aws lambda get-function --function-name water-bill-automation-lambda
-
