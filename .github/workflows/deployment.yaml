@@ -59,7 +59,7 @@ jobs:
           AWS_REGION: 'us-east-1'
         run: |
           zip lambda_function.zip main.py
-          LAYER_ARN=$(aws lambda list-layer-versions --layer-name selenium-layer --query 'LayerVersions[0].LayerVersionArn' --output text)
+          LAYER_ARN=$(aws lambda list-layer-versions --layer-name selenium-layer --query 'LayerVersions[0].LayerVersionArn' --output text --region us-east-1)
           
           # Create the Lambda function or update it if it exists
           aws lambda create-function --function-name water-bill-automation-lambda \
