@@ -1,2 +1,4 @@
 package/
 *.zip
+.DS_Store
+.idea/
