@@ -29,27 +29,17 @@ def lambda_handler(event, context):
             # Send success notification
             send_notification('success', property)
 
-            # TODO: remove
-            break
 
         except Exception as e:
             # Handle error and send notifications
             send_notification('error', property, str(e))
             print(e)
-            # TODO: remove
-            break
 
 def get_properties(client):
-    # Retrieve properties from DynamoDB
-    table = dynamodb.Table('water_bill_system_properties')
 
-    response = table.scan(
-        FilterExpression=boto3.dynamodb.conditions.Attr('ownerId').eq(client)
-    )
+    json_obj = [ { "account_id": "0044672", "billingInformation": { "billingAddressLine1": "134 Wakeman Ave", "billingAddressLine2": "", "cardholderFirstName": "Kevin", "cardholderLastName": "Dowdy", "city": "Newark", "contactPhoneNumber": "9175643523", "emailAddress": "kommunityworks.noreply@gmail.com", "state": "New Jersey", "zipCode": "07104" }, "ownerId": "7b6db613-31a4-4b42-8b8b-91c11ebecb5d", "paymentInformation": { "accountNumber": "381066650126", "checkType": "Checking", "paymentMethod": "Echeck", "routingNumber": "021200339" } }, { "account_id": "0005917", "billingInformation": { "billingAddressLine1": "134 Wakeman Ave", "billingAddressLine2": "", "cardholderFirstName": "Kevin", "cardholderLastName": "Dowdy", "city": "Newark", "contactPhoneNumber": "9175643523", "emailAddress": "kommunityworks.noreply@gmail.com", "state": "New Jersey", "zipCode": "07104" }, "ownerId": "7b6db613-31a4-4b42-8b8b-91c11ebecb5d", "paymentInformation": { "accountNumber": "381066650058", "checkType": "Checking", "paymentMethod": "Echeck", "routingNumber": "021200339" } } ]
 
-    print(response)
-
-    return response['Items']
+    return json_obj
 
 def process_payment(property):
 
@@ -124,7 +114,7 @@ def process_payment(property):
 
         print("Current balance: " + str(type(balance)))
 
-        if float(balance) > 500.00:
+        if float(balance) > 300.00:
             raise Exception('Balance exceeds maximum allowed payment')
         if float(balance) <= 0.00:
             raise Exception('No balance')
@@ -191,7 +181,7 @@ def process_payment(property):
 
         # TODO: Print the HTML content
         print("page six")
-        # print(html_content)
+        print(html_content)
 
         # Press pay online button
         driver.find_element(By.ID, 'submitprocess').click()
